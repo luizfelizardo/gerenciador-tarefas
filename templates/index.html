@@ -6,10 +6,25 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <title>Gerenciador de Tarefas</title>
 </head>
+<script>
+    function validarFormulario() {
+        var descricao = document.getElementById("descricao").value;
+        if (descricao.trim() === "") {
+            alert("Por favor, insira uma descrição para a tarefa.");
+            return false;
+        }
+        return true;
+    }
+</script>
 <body>
+    <div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+    </div>   
     <h1>Gerenciador de Tarefas</h1>
     <div class="conteiner">
-        <form method="POST">
+        <form id="tarefaForm" method="POST" onsubmit="return validarFormulario()">
             <div class="input-group">
                 <label for="descricao"></label>
                 <input type="text" name="descricao" id="descricao" class="input-field input-descricao" placeholder="Descrição">
@@ -19,21 +34,22 @@
                 <input type="date" name="data_criacao" id="data_criacao" class="input-field input-data" placeholder="Data de Criação">
             </div>
             <div class="input-group">
-                <label for="data_vencimento"></label>
-                <input type="date" name="data_vencimento" id="data_vencimento" class="input-field input-data" placeholder="Data de Vencimento">
+                <label for="observacao"></label>
+                <input type="text" name="observacao" id="observacao" class="input-field input-data" placeholder="Observação">
             </div>
             <div class="button-container">
                 <button type="submit" class="button-add-task">Adicionar</button>
             </div>
         </form>
-        <ul class="list-tasks">
+        <ul>
             {% for tarefa in tarefas %}
-            <li class="task {% if tarefa[2] == 'concluida' %}done{% endif %}">
-                <p>{{ tarefa[1] }} - {{ tarefa[3] }}</p>
-                <a href="/deletar/{{ tarefa[0] }}" title="Deletar tarefa"><img src="{{ url_for('static', filename='img/trash.png') }}" alt="Deletar"></a>
+            <li>
+                <span class="tarefa">{{ tarefa[1] }}</span> - {{ tarefa[2] }} - {{ tarefa[3] }}
+                <a href="/concluir/{{ tarefa[0] }}" class="concluir-btn">Concluir</a>
+                <a href="/deletar/{{ tarefa[0] }}" class="deletar-btn">Deletar</a>
             </li>
             {% endfor %}
         </ul>
     </div>
 </body>
-</html> 
+</html>

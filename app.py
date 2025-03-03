@@ -15,19 +15,19 @@ def criar_tabela():
             descricao TEXT NOT NULL,
             status TEXT NOT NULL,
             data_criacao TEXT NOT NULL,
-            data_vencimento TEXT
+            observacao TEXT
         )
     """)
     conexao.commit()
     conexao.close()
 
-def adicionar_tarefa(descricao, status, data_criacao, data_vencimento):
+def adicionar_tarefa(descricao, status, data_criacao, observacao):
     conexao = conectar_banco()
     cursor = conexao.cursor()
     cursor.execute("""
-        INSERT INTO tarefas (descricao, status, data_criacao, data_vencimento)
+        INSERT INTO tarefas (descricao, status, data_criacao, observacao)
         VALUES (?, ?, ?, ?)
-    """, (descricao, status, data_criacao, data_vencimento))
+    """, (descricao, status, data_criacao, observacao))
     conexao.commit()
     conexao.close()
 
@@ -46,6 +46,16 @@ def deletar_tarefa(id):
     conexao.commit()
     conexao.close()
 
+def marcar_concluida(id):
+    try:
+        conexao = conectar_banco()
+        cursor = conexao.cursor()
+        cursor.execute("UPDATE tarefas SET status = 'concluida' WHERE id = ?", (id,))
+        conexao.commit()
+        conexao.close()
+    except sqlite3.Error as e:
+        print(f"Erro ao marcar tarefa como concluída: {e}")
+        
 criar_tabela()
 
 @app.route('/', methods=['GET', 'POST'])
@@ -53,15 +63,20 @@ def index():
     if request.method == 'POST':
         descricao = request.form['descricao']
         data_criacao = request.form['data_criacao']
-        data_vencimento = request.form['data_vencimento']
-        adicionar_tarefa(descricao, 'pendente', data_criacao, data_vencimento)
-        return redirect(url_for('index'))  # Redireciona para evitar reenvio do formulário
+        observacao = request.form['observacao']
+        adicionar_tarefa(descricao, 'pendente', data_criacao, observacao)
+        return redirect(url_for('index'))
     tarefas = listar_tarefas()
     return render_template('index.html', tarefas=tarefas)
 
 @app.route('/deletar/<int:id>')
 def deletar(id):
     deletar_tarefa(id)
+    return redirect(url_for('index'))
+
+@app.route('/concluir/<int:id>')
+def concluir(id):
+    marcar_concluida(id)
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
