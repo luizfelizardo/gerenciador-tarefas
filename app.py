@@ -5,9 +5,13 @@ import click
 
 app = Flask(__name__)
 
-# --- CERTIFIQUE-SE QUE ESTA LINHA ESTÁ ASSIM PARA O DEPLOY NO RENDER ---
-DATABASE = os.path.join('/var/data', 'tarefas.db')
-# ---------------------------------------------------------------------
+# --- PARA O DEPLOY NO RENDER (PLANO GRATUITO SEM PERSISTÊNCIA) ---
+# Coloca o DB na raiz do diretório de trabalho do Render.
+# Os dados NÃO SERÃO persistentes entre deploys ou reinícios.
+DATABASE = 'tarefas.db' 
+
+# PARA DESENVOLVIMENTO LOCAL, VOCÊ TAMBÉM PODE USAR ESTA LINHA.
+# Se você já configurou localmente para 'tarefas.db', não precisa mudar.
 
 # Função para obter uma conexão com o banco de dados
 def conectar_banco():
@@ -20,12 +24,14 @@ def conectar_banco():
 def init_db_command():
     """Cria as tabelas do banco de dados."""
     
-    # Verifica se o caminho do DATABASE inclui um diretório (ex: '/var/data/tarefas.db')
-    # Se incluir, tenta criar o diretório pai. Se for apenas 'tarefas.db', não faz nada.
-    db_dir = os.path.dirname(DATABASE)
-    if db_dir: # Se db_dir não for uma string vazia
-        os.makedirs(db_dir, exist_ok=True)
+    # --- REMOVA OU COMENTE AS 3 LINHAS ABAIXO ---
+    # db_dir = os.path.dirname(DATABASE)
+    # if db_dir: 
+    #     os.makedirs(db_dir, exist_ok=True)
+    # ---------------------------------------------
     
+    # Apenas conecte e crie a tabela. O sqlite3.connect() criará o arquivo tarefas.db
+    # na raiz do projeto se ele não existir.
     conn = conectar_banco()
     conn.execute("""
         CREATE TABLE IF NOT EXISTS tarefas (
