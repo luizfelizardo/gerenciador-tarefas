@@ -1,15 +1,35 @@
-from flask import Flask, redirect, request, render_template, url_for
+import os
 import sqlite3
+from flask import Flask, redirect, request, render_template, url_for
+import click
 
 app = Flask(__name__)
 
-def conectar_banco():
-    return sqlite3.connect("tarefas.db")
+# PARA O DEPLOY NO RENDER, USE ESTA LINHA:
+DATABASE = os.path.join('/var/data', 'tarefas.db')
 
-def criar_tabela():
-    conexao = conectar_banco()
-    cursor = conexao.cursor()
-    cursor.execute("""
+# Para desenvolvimento local, você usaria:
+# DATABASE = 'tarefas.db'
+
+# Função para obter uma conexão com o banco de dados
+def conectar_banco():
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+# NOVO: Comando CLI para inicializar o banco de dados
+@app.cli.command('init-db')
+def init_db_command():
+    """Cria as tabelas do banco de dados."""
+    
+    # Verifica se o caminho do DATABASE inclui um diretório (ex: '/var/data/tarefas.db')
+    # Se incluir, tenta criar o diretório pai. Se for apenas 'tarefas.db', não faz nada.
+    db_dir = os.path.dirname(DATABASE)
+    if db_dir: # Se db_dir não for uma string vazia
+        os.makedirs(db_dir, exist_ok=True)
+    
+    conn = conectar_banco()
+    conn.execute("""
         CREATE TABLE IF NOT EXISTS tarefas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             descricao TEXT NOT NULL,
@@ -18,45 +38,45 @@ def criar_tabela():
             observacao TEXT
         )
     """)
-    conexao.commit()
-    conexao.close()
+    conn.commit()
+    conn.close()
+    click.echo('Banco de dados inicializado.')
 
+# Função para adicionar uma nova tarefa
 def adicionar_tarefa(descricao, status, data_criacao, observacao):
-    conexao = conectar_banco()
-    cursor = conexao.cursor()
-    cursor.execute("""
+    conn = conectar_banco()
+    conn.execute("""
         INSERT INTO tarefas (descricao, status, data_criacao, observacao)
         VALUES (?, ?, ?, ?)
     """, (descricao, status, data_criacao, observacao))
-    conexao.commit()
-    conexao.close()
+    conn.commit()
+    conn.close()
 
+# Função para listar todas as tarefas
 def listar_tarefas():
-    conexao = conectar_banco()
-    cursor = conexao.cursor()
-    cursor.execute("SELECT * FROM tarefas")
-    tarefas = cursor.fetchall()
-    conexao.close()
+    conn = conectar_banco()
+    tarefas = conn.execute("SELECT * FROM tarefas ORDER BY id DESC").fetchall()
+    conn.close()
     return tarefas
 
-def deletar_tarefa(id):
-    conexao = conectar_banco()
-    cursor = conexao.cursor()
-    cursor.execute("DELETE FROM tarefas WHERE id = ?", (id,))
-    conexao.commit()
-    conexao.close()
+# Função para deletar uma tarefa por ID
+def deletar_tarefa(id_tarefa):
+    conn = conectar_banco()
+    conn.execute("DELETE FROM tarefas WHERE id = ?", (id_tarefa,))
+    conn.commit()
+    conn.close()
 
-def marcar_concluida(id):
+# Função para marcar uma tarefa como concluída
+def marcar_concluida(id_tarefa):
     try:
-        conexao = conectar_banco()
-        cursor = conexao.cursor()
-        cursor.execute("UPDATE tarefas SET status = 'concluida' WHERE id = ?", (id,))
-        conexao.commit()
-        conexao.close()
+        conn = conectar_banco()
+        conn.execute("UPDATE tarefas SET status = 'concluida' WHERE id = ?", (id_tarefa,))
+        conn.commit()
+        conn.close()
     except sqlite3.Error as e:
         print(f"Erro ao marcar tarefa como concluída: {e}")
-        
-criar_tabela()
+
+# --- Rotas da Aplicação ---
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -66,18 +86,21 @@ def index():
         observacao = request.form['observacao']
         adicionar_tarefa(descricao, 'pendente', data_criacao, observacao)
         return redirect(url_for('index'))
+    
     tarefas = listar_tarefas()
     return render_template('index.html', tarefas=tarefas)
 
-@app.route('/deletar/<int:id>')
-def deletar(id):
-    deletar_tarefa(id)
+@app.route('/deletar/<int:id_tarefa>')
+def deletar(id_tarefa):
+    deletar_tarefa(id_tarefa)
     return redirect(url_for('index'))
 
-@app.route('/concluir/<int:id>')
-def concluir(id):
-    marcar_concluida(id)
+@app.route('/concluir/<int:id_tarefa>')
+def concluir(id_tarefa):
+    marcar_concluida(id_tarefa)
     return redirect(url_for('index'))
 
+# --- Início da Aplicação Flask ---
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=True, host='0.0.0.0', port=port)
