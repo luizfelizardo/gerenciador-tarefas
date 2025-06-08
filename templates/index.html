@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>Gerenciador de Tarefas</title>
+</head>
+<script>
+    function validarFormulario() {
+        var descricao = document.getElementById("descricao").value;
+        if (descricao.trim() === "") {
+            alert("Por favor, insira uma descrição para a tarefa.");
+            return false;
+        }
+        return true;
+    }
+</script>
+<body>
+    <div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+    </div>   
+    <h1>Gerenciador de Tarefas</h1>
+    <div class="conteiner">
+        <form id="tarefaForm" method="POST" onsubmit="return validarFormulario()">
+            <div class="input-group">
+                <label for="descricao"></label>
+                <input type="text" name="descricao" id="descricao" class="input-field input-descricao" placeholder="Descrição">
+            </div>
+            <div class="input-group">
+                <label for="data_criacao"></label>
+                <input type="date" name="data_criacao" id="data_criacao" class="input-field input-data" placeholder="Data de Criação">
+            </div>
+            <div class="input-group">
+                <label for="observacao"></label>
+                <input type="text" name="observacao" id="observacao" class="input-field input-data" placeholder="Observação">
+            </div>
+            <div class="button-container">
+                <button type="submit" class="button-add-task">Adicionar</button>
+            </div>
+        </form>
+        <ul>
+            {% for tarefa in tarefas %}
+            <li>
+                {# Novo contêiner para o ícone de concluir e as informações da tarefa #}
+                <div class="tarefa-main-content">
+                    {# Ícone de Concluir na frente #}
+                    <a href="/concluir/{{ tarefa[0] }}" class="concluir-btn-icon">
+                        <i class="fas fa-check-circle"></i> {# Ícone de check #}
+                    </a>
+
+                    <div class="tarefa-info">
+                        <span class="tarefa">{{ tarefa[1] }}</span> - {{ tarefa[2] }} -
+                        {% if tarefa[3] == 'pendente' %}
+                            <span class="status-pendente">{{ tarefa[3] }}</span>
+                        {% else %}
+                            {{ tarefa[3] }}
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {# Botão Excluir no final #}
+                <a href="/deletar/{{ tarefa[0] }}" class="deletar-btn-icon">
+                    <i class="fas fa-trash"></i> {# Ícone de lixeira #}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>
