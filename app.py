@@ -5,11 +5,9 @@ import click
 
 app = Flask(__name__)
 
-# PARA O DEPLOY NO RENDER, USE ESTA LINHA:
+# --- CERTIFIQUE-SE QUE ESTA LINHA ESTÁ ASSIM PARA O DEPLOY NO RENDER ---
 DATABASE = os.path.join('/var/data', 'tarefas.db')
-
-# Para desenvolvimento local, você usaria:
-# DATABASE = 'tarefas.db'
+# ---------------------------------------------------------------------
 
 # Função para obter uma conexão com o banco de dados
 def conectar_banco():
