@@ -20,8 +20,11 @@ Um aplicativo web simples para gerenciar suas tarefas diárias, permitindo adici
 
 ## 📂 Estrutura do Projeto
 
+Acesse o Gerenciador de tarefas: https://gerenciador-tarefas-15j7.onrender.com/
+
 Assista ao vídeo: 
 https://github.com/user-attachments/assets/d8323e6f-8daf-41c7-987d-8567f20519b6
+
 
 ## ⚙️ Como Executar Localmente
 
